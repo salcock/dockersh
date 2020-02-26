@@ -210,8 +210,18 @@ if len(containers(container_filter=args.name)) == 0:
     binds = {v[0].strip():{"bind":v[1].strip(),"mode":v[2].strip()} for v in volumes}
     volumes = [v[1] for v in volumes]
 
+    sysctls = {}
+    specctls = []
+    if "sysctls" in args.ini:
+            specctls = args.ini["sysctls"].split(",")
+
+    for ctl in specctls:
+        ctlarg = ctl.split("=")
+        sysctls[ctlarg[0]] = ctlarg[1]
+
     host_config = cli.create_host_config(
         binds=binds,
+        sysctls=sysctls,
         restart_policy={'Name' : 'unless-stopped'})
 
     #cli.pull(args.image)
@@ -231,6 +241,15 @@ if len(containers(container_filter=args.name)) == 0:
                          },
                          host_config=host_config
                          )
+
+    if "networks" in args.ini:
+        networks = args.ini["networks"].split(",")
+    else:
+        networks = []
+
+    for net in networks:
+        print("Connecting container to network %s..." % (net))
+        cli.connect_container_to_network(args.full_name, net)
     initing=True
 
 cli.start(args.full_name)
