@@ -219,10 +219,21 @@ if len(containers(container_filter=args.name)) == 0:
         ctlarg = ctl.split("=")
         sysctls[ctlarg[0]] = ctlarg[1]
 
-    host_config = cli.create_host_config(
-        binds=binds,
-        sysctls=sysctls,
-        restart_policy={'Name' : 'unless-stopped'})
+    config_args = {
+            "binds": binds,
+            "cpu_period": 10000,
+            "sysctls": sysctls,
+            "restart_policy": {'Name' : 'unless-stopped'}
+    }
+
+    if "memhardlimit" in args.ini:
+        config_args["mem_limit"] = args.ini["memhardlimit"]
+        config_args["memswap_limit"] = args.ini["memhardlimit"]
+
+    if "cpulimit" in args.ini:
+        config_args["cpu_quota"] = int(float(args.ini["cpulimit"]) * config_args["cpu_period"])
+
+    host_config = cli.create_host_config(**config_args);
 
     #cli.pull(args.image)
     userpwd = getpwnam(user)
