@@ -16,7 +16,7 @@ import socket
 import os
 
 prog = 'dockersh'
-version = prog + " v1.0"
+version = prog + " v1.1"
 config_file = "/etc/dockersh.ini"
 
 user = os.getlogin()
@@ -219,10 +219,49 @@ if len(containers(container_filter=args.name)) == 0:
         ctlarg = ctl.split("=")
         sysctls[ctlarg[0]] = ctlarg[1]
 
+    if "hostinterface" in args.ini:
+            hostint = args.ini["hostinterface"]
+    else:
+            # use the interface used by the default route as a fallback
+            hostint = os.popen("ip route").read().split()[4]
+
+    try:
+        hostip = os.popen('ip addr show %s' % (hostint)).read().split("inet ")[1].split("/")[0]
+    except:
+        print("Unable to get IP address for interface '%s' on host VM -- container cannot be used for starting Spark jobs!")
+        hostip = "127.0.0.1"
+
+    specports = []
+    portbindings = {}
+
+    if "sparkdriverport" in args.ini:
+        spark_driver_port = int(args.ini['sparkdriverport'])
+    else:
+        print("No spark driver port set for user container (%s)" % (user))
+        spark_driver_port = 5001
+
+    if "sparkuiport" in args.ini:
+        spark_ui_port = int(args.ini['sparkuiport'])
+    else:
+        print("No spark ui port set for user container (%s)" % (user))
+        spark_ui_port = 5002
+
+    if "sparkblockport" in args.ini:
+        spark_block_port = int(args.ini['sparkblockport'])
+    else:
+        print("No spark block port set for user container (%s)" % (user))
+        spark_driver_port = 5003
+
+    specports = [spark_driver_port, spark_ui_port, spark_block_port]
+    portbindings[spark_driver_port] = spark_driver_port
+    portbindings[spark_ui_port] = spark_ui_port
+    portbindings[spark_block_port] = spark_block_port
+
     config_args = {
             "binds": binds,
             "cpu_period": 10000,
             "sysctls": sysctls,
+            "port_bindings": portbindings,
             "restart_policy": {'Name' : 'unless-stopped'}
     }
 
@@ -242,13 +281,18 @@ if len(containers(container_filter=args.name)) == 0:
                          tty=True,
                          name=args.full_name,
                          hostname=args.name,
+                         ports=specports,
                          labels={'group': prog, 'user': user},
                          volumes=volumes,
                          working_dir=args.home,
                          environment={
                             "HOST_USER_ID": userpwd.pw_uid,
                             "HOST_USER_GID": userpwd.pw_gid,
-                            "HOST_USER_NAME": user
+                            "HOST_USER_NAME": user,
+                            "HOST_IP_ADDRESS": hostip,
+                            "SPARK_DRIVER_PORT": spark_driver_port,
+                            "SPARK_BLOCK_PORT": spark_block_port,
+                            "SPARK_UI_PORT": spark_ui_port,
                          },
                          host_config=host_config
                          )
