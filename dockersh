@@ -152,7 +152,7 @@ if cfg.has_section("ADMIN") and "maintenance" in cfg["ADMIN"] and cfg["ADMIN"]["
     if "maintenance_text" in cfg["ADMIN"]:
         print(cfg["ADMIN"]["maintenance_text"])
     else:
-        print("This Maschine is in Maintanence Mode.")
+        print("This Machine is in Maintenance Mode.")
     sys.exit(0)
 
 is_scp_cmd = False
@@ -168,7 +168,7 @@ if not is_scp_cmd and cfg.has_section("ADMIN") and "maintenance" in cfg["ADMIN"]
     if "maintenance_text" in cfg["ADMIN"]:
         print(cfg["ADMIN"]["maintenance_text"])
     else:
-        print("This Maschine is in Maintanence Mode. However, you can copy files with scp, rsync, sftp or list files with ls without connecting to the maschine.")
+        print("This Machine is in Maintenance Mode. However, you can copy files with scp, rsync, sftp or list files with ls without connecting to the machine.")
     sys.exit(0)
 
 if args.temp:
@@ -310,8 +310,8 @@ if len(containers(container_filter=args.name)) == 0:
 cli.start(args.full_name)
 if initing:
     print("Initializing container ...")
-    #os.popen('docker exec '+args.full_name + ' /bin/bash -c "if [ -e /init-user ]; then /init-user; else echo \"No Initialization skript found for container\"; fi; echo Initialization finished."').read().split(":")[-1]
-    init_cmd = 'docker exec '+args.full_name + ' /bin/bash -c "if [ -e /init-user ]; then /init-user; else echo \\\"No Initialization skript found for container\\\"; fi; echo Initialization finished."'
+    #os.popen('docker exec '+args.full_name + ' /bin/bash -c "if [ -e /init-user ]; then /init-user; else echo \"No Initialization script found for container\"; fi; echo Initialization finished."').read().split(":")[-1]
+    init_cmd = 'docker exec '+args.full_name + ' /bin/bash -c "if [ -e /init-user ]; then /init-user; else echo \\\"No Initialization script found for container\\\"; fi; echo Initialization finished."'
     print(os.popen(init_cmd).read())
     #print("Please login again.")
     #sys.exit(0)
