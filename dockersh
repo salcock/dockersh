@@ -250,7 +250,7 @@ if len(containers(container_filter=args.name)) == 0:
         spark_block_port = int(args.ini['sparkblockport'])
     else:
         print("No spark block port set for user container (%s)" % (user))
-        spark_driver_port = 5003
+        spark_block_port = 5003
 
     specports = [spark_driver_port, spark_ui_port, spark_block_port]
     portbindings[spark_driver_port] = spark_driver_port
